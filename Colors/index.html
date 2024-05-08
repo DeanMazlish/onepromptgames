@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Collector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #targetColorDisplay, #currentColorDisplay {
+            width: 150px;
+            height: 150px;
+            border-radius: 75px;
+            margin: 10px;
+            display: inline-block;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #colorCircles {
+            margin: 20px;
+        }
+        .colorCircle {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #gameInfo {
+            margin-top: 20px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Color Collector</h1>
+    <p>Click on the circles to collect colors and match the target color!</p>
+
+    <div>
+        <div id="targetColorDisplay"></div>
+        <div id="currentColorDisplay"></div>
+    </div>
+
+    <div id="colorCircles"></div>
+
+    <div id="gameInfo">
+        <p>Target Color: <span id="targetColorText"></span></p>
+        <p>Your Color: <span id="currentColorText"></span></p>
+    </div>
+
+    <button onclick="resetGame()">Reset Game</button>
+
+    <script>
+        const targetColorDisplay = document.getElementById('targetColorDisplay');
+        const currentColorDisplay = document.getElementById('currentColorDisplay');
+        const targetColorText = document.getElementById('targetColorText');
+        const currentColorText = document.getElementById('currentColorText');
+        const colorCircles = document.getElementById('colorCircles');
+
+        let targetColor = { r: 0, g: 0, b: 0 };
+        let currentColor = { r: 0, g: 0, b: 0 };
+        const tolerance = 15; // How close the colors need to be
+
+        function generateRandomColor() {
+            return {
+                r: Math.floor(Math.random() * 256),
+                g: Math.floor(Math.random() * 256),
+                b: Math.floor(Math.random() * 256)
+            };
+        }
+
+        function colorToString(color) {
+            return `rgb(${color.r}, ${color.g}, ${color.b})`;
+        }
+
+        function updateDisplays() {
+            targetColorDisplay.style.backgroundColor = colorToString(targetColor);
+            currentColorDisplay.style.backgroundColor = colorToString(currentColor);
+            targetColorText.textContent = colorToString(targetColor);
+            currentColorText.textContent = colorToString(currentColor);
+        }
+
+        function addColor(color) {
+            // Color blending by averaging
+            currentColor.r = Math.min(255, (currentColor.r + color.r) / 2);
+            currentColor.g = Math.min(255, (currentColor.g + color.g) / 2);
+            currentColor.b = Math.min(255, (currentColor.b + color.b) / 2);
+            updateDisplays();
+            checkWin();
+        }
+
+        function checkWin() {
+            if (Math.abs(currentColor.r - targetColor.r) < tolerance &&
+                Math.abs(currentColor.g - targetColor.g) < tolerance &&
+                Math.abs(currentColor.b - targetColor.b) < tolerance) {
+                alert("Congratulations! You've matched the color!");
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            targetColor = generateRandomColor();
+            currentColor = { r: 0, g: 0, b: 0 };
+            generateColorCircles();
+            updateDisplays();
+        }
+
+        function generateColorCircles() {
+            colorCircles.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const color = generateRandomColor();
+                const circle = document.createElement('div');
+                circle.className = 'colorCircle';
+                circle.style.backgroundColor = colorToString(color);
+                circle.onclick = function() { addColor(color); };
+                colorCircles.appendChild(circle);
+            }
+        }
+
+        resetGame(); // Initialize the game
+    </script>
+</body>
+</html>

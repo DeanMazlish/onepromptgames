@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #gameArea {
+            margin-top: 20px;
+        }
+        .key {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            margin: 10px;
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            font-size: 20px;
+            border-radius: 10px;
+            user-select: none;
+            cursor: pointer;
+        }
+        .key.active {
+            background-color: #0056b3;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Echo Tracker</h1>
+    <p>Listen to the sequence and repeat it using your keyboard!</p>
+
+    <div id="gameArea"></div>
+    <div id="statusArea">
+        <p>Round: <span id="roundNumber">0</span></p>
+        <p>Sequence Length: <span id="sequenceLength">0</span></p>
+    </div>
+
+    <button onclick="startGame()">Start Game</button>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const roundNumber = document.getElementById('roundNumber');
+        const sequenceLength = document.getElementById('sequenceLength');
+        const keys = ['A', 'S', 'D', 'F'];
+        let gameSequence = [];
+        let playerSequence = [];
+        let round = 0;
+
+        function playTone(key, duration = 600) {
+            const audio = new Audio(`https://s3.amazonaws.com/freecodecamp/simonSound${keys.indexOf(key) + 1}.mp3`);
+            audio.play();
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }, duration);
+        }
+
+        function flashKey(key) {
+            const keyElement = document.getElementById(`key-${key}`);
+            keyElement.classList.add('active');
+            playTone(key);
+            setTimeout(() => {
+                keyElement.classList.remove('active');
+            }, 300);
+        }
+
+        function showSequence(sequence) {
+            let delay = 0;
+            sequence.forEach((key, index) => {
+                setTimeout(() => {
+                    flashKey(key);
+                }, 600 * index);
+            });
+        }
+
+        function addRandomKeyToSequence() {
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            gameSequence.push(randomKey);
+        }
+
+        function startGame() {
+            gameSequence = [];
+            playerSequence = [];
+            round = 0;
+            nextRound();
+        }
+
+        function nextRound() {
+            round++;
+            roundNumber.textContent = round;
+            addRandomKeyToSequence();
+            sequenceLength.textContent = gameSequence.length;
+            playerSequence = [];
+            showSequence(gameSequence);
+        }
+
+        function handlePlayerInput(key) {
+            playerSequence.push(key);
+            const index = playerSequence.length - 1;
+            if (playerSequence[index] !== gameSequence[index]) {
+                alert('Oops! Wrong sequence. Game over.');
+                startGame();
+                return;
+            }
+            if (playerSequence.length === gameSequence.length) {
+                setTimeout(nextRound, 1000);
+            }
+        }
+
+        keys.forEach(key => {
+            const keyElement = document.createElement('div');
+            keyElement.id = `key-${key}`;
+            keyElement.className = 'key';
+            keyElement.textContent = key;
+            keyElement.onclick = () => handlePlayerInput(key);
+            gameArea.appendChild(keyElement);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toUpperCase();
+            if (keys.includes(key)) {
+                flashKey(key);
+                handlePlayerInput(key);
+            }
+        });
+    </script>
+</body>
+</html>

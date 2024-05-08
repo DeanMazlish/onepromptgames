@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meteor Math</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to bottom, #5c258d, #4389a2);
+        }
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            overflow: hidden;
+            background-color: #000;
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+        .meteor {
+            position: absolute;
+            width: 100px;
+            height: 50px;
+            background-color: darkred;
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: #fff;
+        }
+        #answerInput {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            padding: 10px;
+            font-size: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">Score: 0</div>
+        <input type="text" id="answerInput" placeholder="Answer here" autofocus>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('gameContainer');
+        const answerInput = document.getElementById('answerInput');
+        const scoreDisplay = document.getElementById('score');
+        let score = 0;
+        let meteors = [];
+        let gameSpeed = 1.0;
+        let gameInterval;
+
+        function createMeteor() {
+            const meteor = document.createElement('div');
+            meteor.classList.add('meteor');
+
+            const num1 = Math.floor(Math.random() * 10) + 1;
+            const num2 = Math.floor(Math.random() * 10) + 1;
+            const operators = ['+', '-', '*'];
+            const operator = operators[Math.floor(Math.random() * operators.length)];
+            meteor.dataset.value = eval(`${num1} ${operator} ${num2}`);
+            meteor.textContent = `${num1} ${operator} ${num2}`;
+            meteor.style.left = `${Math.random() * (gameContainer.clientWidth - 100)}px`;
+            meteor.style.top = `-${50}px`;
+
+            gameContainer.appendChild(meteor);
+            meteors.push(meteor);
+        }
+
+        function moveMeteors() {
+            meteors.forEach((meteor, index) => {
+                const currentTop = parseFloat(meteor.style.top);
+                if (currentTop > gameContainer.clientHeight) {
+                    gameOver();
+                } else {
+                    meteor.style.top = `${currentTop + gameSpeed}px`;
+                }
+            });
+        }
+
+        function checkAnswer() {
+            const answer = answerInput.value;
+            meteors.forEach((meteor, index) => {
+                if (meteor.dataset.value === answer) {
+                    gameContainer.removeChild(meteor);
+                    meteors.splice(index, 1);
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    answerInput.value = '';
+                    increaseSpeed();
+                }
+            });
+        }
+
+        function increaseSpeed() {
+            if (score % 5 === 0) {
+                gameSpeed += 0.5;
+            }
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            meteors.forEach(meteor => gameContainer.removeChild(meteor));
+            meteors = [];
+            alert('Game Over! Your score: ' + score);
+            score = 0;
+            scoreDisplay.textContent = `Score: 0`;
+            gameSpeed = 1.0;
+            startGame();
+        }
+
+        function startGame() {
+            gameInterval = setInterval(() => {
+                moveMeteors();
+                if (Math.random() < 0.02) {
+                    createMeteor();
+                }
+            }, 50);
+        }
+
+        answerInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        startGame();
+    </script>
+</body>
+</html>
