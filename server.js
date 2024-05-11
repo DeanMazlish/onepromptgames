@@ -7,9 +7,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 
 // Serve games from their specific directories under the 'games' folder
-app.use('/Color', express.static(path.join(__dirname, 'games/Color')));
-app.use('/Echo', express.static(path.join(__dirname, 'games/Echo')));
-app.use('/Meteor', express.static(path.join(__dirname, 'games/Meteor')));
+app.use('/Colors', express.static(path.join(__dirname, 'Games/Colors')));
+app.use('/Echo', express.static(path.join(__dirname, 'Games/Echo')));
+app.use('/Meteor', express.static(path.join(__dirname, 'Games/Meteor')));
 
 
 // Root route serves the landing page
@@ -18,16 +18,16 @@ app.get('/', (req, res) => {
 });
 
 // Additional routes for each game
-app.get('/Color', (req, res) => {
-  res.sendFile(path.join(__dirname, 'games/Color/index.html'));
+app.get('/Colors', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Games/Colors/index.html'));
 });
 
 app.get('/Echo', (req, res) => {
-  res.sendFile(path.join(__dirname, 'games/Echo/index.html'));
+  res.sendFile(path.join(__dirname, 'Games/Echo/index.html'));
 });
 
 app.get('/Meteor', (req, res) => {
-  res.sendFile(path.join(__dirname, 'games/Meteor/index.html'));
+  res.sendFile(path.join(__dirname, 'Games/Meteor/index.html'));
 });
 
 
