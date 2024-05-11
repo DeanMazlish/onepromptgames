@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EcoQuest</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #e0f7fa;
+        }
+        #gameBoard {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-gap: 5px;
+            cursor: pointer;
+        }
+        .tile {
+            width: 50px;
+            height: 50px;
+            background: #a5d6a7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .polluted {
+            background: #616161;
+        }
+        #infoPanel {
+            margin-left: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div id="gameBoard"></div>
+        <div id="infoPanel">
+            <p>Plants Planted: <span id="plantsCount">0</span></p>
+            <p>Pollution Cleared: <span id="pollutionCount">0</span></p>
+            <p>Score: <span id="score">0</span></p>
+            <button onclick="restartGame()">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        const gameBoard = document.getElementById('gameBoard');
+        const plantsCount = document.getElementById('plantsCount');
+        const pollutionCount = document.getElementById('pollutionCount');
+        const scoreSpan = document.getElementById('score');
+
+        const boardSize = 10;
+        let score = 0;
+        let plantsPlanted = 0;
+        let pollutionCleared = 0;
+
+        const tileTypes = {
+            EMPTY: ' ',
+            TREE: '🌳',
+            FLOWER: '🌼',
+            POLLUTED: '⚫'
+        };
+
+        function createTile(status = tileTypes.EMPTY) {
+            const tileElement = document.createElement('div');
+            tileElement.className = 'tile';
+            tileElement.textContent = status;
+            tileElement.addEventListener('click', function() {
+                if (this.textContent === tileTypes.POLLUTED) {
+                    this.textContent = tileTypes.EMPTY;
+                    this.classList.remove('polluted');
+                    pollutionCleared++;
+                    pollutionCount.textContent = pollutionCleared;
+                    score += 5;
+                } else if (this.textContent === tileTypes.EMPTY) {
+                    this.textContent = tileTypes.TREE;
+                    plantsPlanted++;
+                    plantsCount.textContent = plantsPlanted;
+                    score += 10;
+                } else if (this.textContent === tileTypes.TREE) {
+                    this.textContent = tileTypes.FLOWER;
+                    score += 15;
+                }
+                scoreSpan.textContent = score;
+            });
+            if (status === tileTypes.POLLUTED) {
+                tileElement.classList.add('polluted');
+            }
+            return tileElement;
+        }
+
+        function initializeBoard() {
+            gameBoard.innerHTML = '';
+            for (let i = 0; i < boardSize * boardSize; i++) {
+                gameBoard.appendChild(createTile(Math.random() > 0.8 ? tileTypes.POLLUTED : tileTypes.EMPTY));
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            plantsPlanted = 0;
+            pollutionCleared = 0;
+            plantsCount.textContent = '0';
+            pollutionCount.textContent = '0';
+            scoreSpan.textContent = '0';
+            initializeBoard();
+        }
+
+        restartGame();
+    </script>
+</body>
+</html>
