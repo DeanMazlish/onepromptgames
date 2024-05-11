@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rocket Dodge</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+        canvas {
+            background: #011;
+            display: block;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div id="score">Score: 0</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const rocket = {
+            x: 50,
+            y: canvas.height / 2,
+            width: 40,
+            height: 20,
+            dy: 0,
+            speed: 2
+        };
+
+        const asteroids = [];
+        const asteroidSpeed = 3;
+        let score = 0;
+        let gameFrame = 0;
+
+        // Load rocket image
+        const rocketImg = new Image();
+        rocketImg.src = 'https://i.imgur.com/e9J6gN7.png'; // Sample rocket image
+
+        // Load asteroid image
+        const asteroidImg = new Image();
+        asteroidImg.src = 'https://i.imgur.com/OdL0XPt.png'; // Sample asteroid image
+
+        function drawRocket() {
+            ctx.drawImage(rocketImg, rocket.x, rocket.y, rocket.width, rocket.height);
+        }
+
+        function drawAsteroids() {
+            asteroids.forEach(asteroid => {
+                ctx.drawImage(asteroidImg, asteroid.x, asteroid.y, asteroid.width, asteroid.height);
+                asteroid.x -= asteroidSpeed;
+            });
+
+            // Remove asteroids that have moved off screen
+            asteroids.forEach((asteroid, index) => {
+                if (asteroid.x + asteroid.width < 0) {
+                    asteroids.splice(index, 1);
+                }
+            });
+        }
+
+        function createAsteroid() {
+            const size = Math.random() * 20 + 20; // Size between 20 and 40
+            const y = Math.random() * (canvas.height - size);
+            asteroids.push({
+                x: canvas.width,
+                y: y,
+                width: size,
+                height: size
+            });
+        }
+
+        function detectCollision() {
+            const rocketRect = {
+                x: rocket.x,
+                y: rocket.y,
+                width: rocket.width,
+                height: rocket.height
+            };
+
+            return asteroids.some(asteroid => {
+                const asteroidRect = {
+                    x: asteroid.x,
+                    y: asteroid.y,
+                    width: asteroid.width,
+                    height: asteroid.height
+                };
+
+                return rectIntersect(rocketRect, asteroidRect);
+            });
+        }
+
+        function rectIntersect(r1, r2) {
+            return !(r2.x > r1.x + r1.width ||
+                     r2.x + r2.width < r1.x ||
+                     r2.y > r1.y + r1.height ||
+                     r2.y + r2.height < r1.y);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move and draw rocket
+            rocket.y += rocket.dy;
+            if (rocket.y < 0) rocket.y = 0;
+            if (rocket.y + rocket.height > canvas.height) rocket.y = canvas.height - rocket.height;
+            drawRocket();
+
+            // Draw asteroids
+            if (gameFrame % 60 === 0) {
+                createAsteroid();
+            }
+            drawAsteroids();
+
+            // Collision detection
+            if (detectCollision()) {
+                alert("Game Over! Your score: " + score);
+                document.location.reload();
+            }
+
+            // Update score and continue loop
+            score++;
+            document.getElementById('score').innerText = "Score: " + score;
+            gameFrame++;
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') rocket.dy = -rocket.speed;
+            if (e.key === 'ArrowDown') rocket.dy = rocket.speed;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') rocket.dy = 0;
+        });
+
+        // Start the game
+        gameLoop();
+    </script>
+</body>
+</html>

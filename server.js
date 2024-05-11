@@ -30,6 +30,10 @@ app.get('/Meteor', (req, res) => {
   res.sendFile(path.join(__dirname, 'Games/Meteor/index.html'));
 });
 
+app.get('/Rocket', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Games/Rocket/index.html'));
+});
+
 
 // Listen on the configured port
 app.listen(PORT, '0.0.0.0', () => {
