@@ -1,29 +1,127 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Montserrat', sans-serif;
     margin: 0;
     padding: 0;
     background: #f0f0f0;
     color: #333;
+    line-height: 1.6;
 }
+
 header {
-    background: #004d99;
+    background: #073763; /* Darker blue for better contrast */
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.logo-and-title {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 150px; 
+    margin-right: 15px;
+}
+
+h1 {
+    font-weight: 600;
+    font-size: 2.4em;
+    color: #fff; /* Bright white for readability */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+nav a.sign-in-button {
+    background: #007bff;
     color: #fff;
     padding: 10px 20px;
-    text-align: center;
+    text-decoration: none;
+    border-radius: 20px;
+    transition: background-color 0.3s, transform 0.2s;
 }
+
+nav a.sign-in-button:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+}
+
 .content {
-    padding: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 10px;
 }
+
+.intro {
+    margin-bottom: 30px;
+}
+
+.games-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
 .game {
-    background: white;
-    border: 1px solid #ddd;
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 8px;
+    background: #ffffff;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
-h1, h2 {
+
+.game:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+h2, h3 {
     color: #333;
 }
+
+h2 {
+    font-weight: 400;
+    font-size: 1.8em;
+}
+
+h3 {
+    font-weight: 600;
+    font-size: 1.4em;
+    color: #0056b3;
+}
+
 p {
-    line-height: 1.6;
+    font-weight: 300;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 5px;
+}
+
+a.play-button {
+    display: inline-block;
+    background: #007bff;
+    color: #fff;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+a.play-button:hover {
+    background: #0056b3;
 }

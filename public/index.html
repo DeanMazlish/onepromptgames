@@ -5,62 +5,71 @@
     <title>One Prompt Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>One Prompt Games</h1>
-        <p>Explore games created from a single AI prompt</p>
+        <div class="header-content">
+            <div class="logo-and-title">
+                <img src="onepromptlogo-removebg-preview.png" alt="One Prompt Games Logo" class="logo"> <!-- Ensure you have a logo image or remove this line -->
+                <h1>One Prompt Games</h1>
+            </div>
+            <nav>
+                <a href="#" class="sign-in-button">Sign In</a>
+            </nav>
+        </div>
     </header>
-    <div class="content">
-        <h2>Welcome to One Prompt Games!</h2>
-        <p>Experience the creativity of AI through interactive games developed from a single prompt given to an AI chatbot. Dive in and see how these games challenge your skills and creativity!</p>
+    <main class="content">
+        <section class="intro">
+            <h2>Welcome to One Prompt Games!</h2>
+            <p>Experience the unique creativity of AI through these interactive games, each developed from a single prompt given to an AI model. Dive into the games and challenge your skills!</p>
+        </section>
 
-        <div class="game">
-            <h3>Meteor Math</h3>
-            <p><strong>Objective:</strong> Solve arithmetic problems to destroy incoming meteors before they hit the planet.</p>
-            <ul>
-                <li>Watch the Meteors: Arithmetic problems appear on meteors falling from the top.</li>
-                <li>Solve the Problems: Type the correct answer into the input box at the bottom and press Enter.</li>
-                <li>Destroy Meteors: If your answer is correct, the corresponding meteor is destroyed.</li>
-                <li>Score Points: Each destroyed meteor increases your score.</li>
-                <li>Avoid Meteors Hitting the Planet: The game ends if any meteor reaches the bottom.</li>
-            </ul>
-            <p><a href="/Meteor">Play Meteor Math</a></p>
-        </div>
+        <div class="games-container">
+            <div class="game">
+                <h3>Meteor Math</h3>
+                <p><strong>Objective:</strong> Solve arithmetic problems to destroy meteors before they hit the planet.</p>
+                <ul>
+                    <li>Answer problems on falling meteors.</li>
+                    <li>Score increases with each destroyed meteor.</li>
+                    <li>Game ends if a meteor hits the planet.</li>
+                </ul>
+                <a href="/Meteor" class="play-button">Play Meteor Math</a>
+            </div>
 
-        <div class="game">
-            <h3>Color Collector</h3>
-            <p><strong>Objective:</strong> Collect colors to create a target color as quickly as possible.</p>
-            <ul>
-                <li>Match the Target Color: Click the colored circles to mix their colors into your current color to match the target color circle.</li>
-                <li>Reset Anytime: Click "Reset Game" to start over with a different target color.</li>
-                <li>Winning Condition: You win when your mixed color is within a small range of the target color.</li>
-            </ul>
-            <p><a href="/Colors">Play Color Collector</a></p>
-        </div>
+            <div class="game">
+                <h3>Color Collector</h3>
+                <p><strong>Objective:</strong> Collect colors to match a target shade as quickly as possible.</p>
+                <ul>
+                    <li>Click to mix colors matching the target.</li>
+                    <li>Reset to start over with a new target color.</li>
+                    <li>Match the color closely to win.</li>
+                </ul>
+                <a href="/Colors" class="play-button">Play Color Collector</a>
+            </div>
 
-        <div class="game">
-            <h3>Echo Tracker</h3>
-            <p><strong>Objective:</strong> Listen to a sequence of sounds and repeat it using keyboard keys.</p>
-            <ul>
-                <li>Listen to the Sequence: The game will play a sequence of tones. Watch and listen carefully.</li>
-                <li>Repeat the Sequence: Use the 'A', 'S', 'D', 'F' keys to repeat the sequence of sounds.</li>
-                <li>Advance Through Rounds: Each time you correctly repeat the sequence, the game adds another tone.</li>
-                <li>Winning: Continue through rounds until you make a mistake.</li>
-            </ul>
-            <p><a href="/Echo">Play Echo Tracker</a></p>
-        </div>
+            <div class="game">
+                <h3>Echo Tracker</h3>
+                <p><strong>Objective:</strong> Mimic a sequence of sounds using keyboard keys.</p>
+                <ul>
+                    <li>Observe and listen to the sequence.</li>
+                    <li>Use 'A', 'S', 'D', 'F' keys to repeat it.</li>
+                    <li>Advance by successfully mimicking sounds.</li>
+                </ul>
+                <a href="/Echo" class="play-button">Play Echo Tracker</a>
+            </div>
 
-        <div class="game">
-            <h3>Rocket Dodge</h3>
-            <p><strong>Objective:</strong> Control a rocket to avoid incoming asteroids and survive as long as you can.</p>
-            <ul>
-                <li><strong>Gameplay:</strong> The rocket automatically moves forward through space. Asteroids come from the right side of the screen, and the player must avoid them by moving the rocket up and down using the arrow keys (or tap on the screen for mobile).</li>
-                <li><strong>Difficulty:</strong> The game gets progressively harder as more asteroids appear and they move faster.</li>
-                <li><strong>Scoring:</strong> The score increases the longer you survive, displayed in the top left corner.</li>
-            </ul>
-            <p><a href="/Rocket">Play Rocket Dodge</a></p>
+            <div class="game">
+                <h3>Rocket Dodge</h3>
+                <p><strong>Objective:</strong> Pilot a rocket to dodge asteroids and survive as long as possible.</p>
+                <ul>
+                    <li>Navigate through space avoiding asteroids.</li>
+                    <li>Game difficulty increases over time.</li>
+                    <li>Score based on survival time.</li>
+                </ul>
+                <a href="/Rocket" class="play-button">Play Rocket Dodge</a>
+            </div>
         </div>
-    </div>
+    </main>
 </body>
 </html>
