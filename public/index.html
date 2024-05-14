@@ -82,6 +82,7 @@
                 <form id="loginForm">
                     <input type="email" id="loginEmail" placeholder="Email" required>
                     <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                    <div id="loginFeedback" class="feedback"></div>
                     <button type="submit">Sign In</button>
                 </form>
                 <p>Don't have an account? <a href="#" onclick="showSignUp()">Sign Up</a></p>
@@ -97,6 +98,7 @@
                     <input type="text" id="registerUsername" placeholder="Username" required>
                     <input type="email" id="registerEmail" placeholder="Email" required>
                     <input type="password" id="registerPassword" placeholder="Password" required autocomplete="new-password">
+                    <div id="registerFeedback" class="feedback"></div>
                     <button type="submit">Sign Up</button>
                 </form>
                 <p>Already have an account? <a href="#" onclick="showSignIn()">Sign In</a></p>
@@ -121,6 +123,7 @@
         function showSignIn() {
             document.getElementById('signInForm').style.display = 'block';
             document.getElementById('signUpForm').style.display = 'none';
+            document.getElementById('loginFeedback').textContent = ''; // Clear any existing feedback
         }
 
         function closeSignIn() {
@@ -130,6 +133,7 @@
         function showSignUp() {
             document.getElementById('signUpForm').style.display = 'block';
             document.getElementById('signInForm').style.display = 'none';
+            document.getElementById('registerFeedback').textContent = ''; // Clear any existing feedback
         }
 
         function closeSignUp() {
@@ -150,23 +154,25 @@
         function logout() {
             localStorage.removeItem('idToken');
             updateUI();
-            alert('Logged out successfully');
         }
 
         document.getElementById('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const feedback = document.getElementById('loginFeedback');
+            feedback.textContent = ''; // Clear any existing feedback
             try {
                 const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
                 const idToken = await userCredential.user.getIdToken();
                 localStorage.setItem('idToken', idToken);
-                alert('Login successful');
+                feedback.style.color = 'green';
+                feedback.textContent = 'Login successful';
                 closeSignIn();
                 updateUI();
             } catch (error) {
-                console.error("Error in login:", error);
-                alert('Login failed: ' + error.message);
+                feedback.style.color = 'red';
+                feedback.textContent = 'Login failed: Incorrect email or password';
             }
         });
 
@@ -175,18 +181,21 @@
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
             const username = document.getElementById('registerUsername').value;
+            const feedback = document.getElementById('registerFeedback');
+            feedback.textContent = ''; // Clear any existing feedback
             try {
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 await user.updateProfile({ displayName: username });
                 const idToken = await user.getIdToken();
                 localStorage.setItem('idToken', idToken);
-                alert('Registration successful');
+                feedback.style.color = 'green';
+                feedback.textContent = 'Registration successful';
                 closeSignUp();
                 updateUI();
             } catch (error) {
-                console.error("Error in registration:", error);
-                alert('Registration failed: ' + error.message);
+                feedback.style.color = 'red';
+                feedback.textContent = 'Registration failed: ' + error.message;
             }
         });
 
@@ -269,6 +278,11 @@
 
         .modal form button:hover {
             background-color: #0056b3;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            font-size: 0.9em;
         }
     </style>
 </body>
