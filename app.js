@@ -1,29 +1,28 @@
 const express = require('express');
 const path = require('path');
-const { admin, db } = require('./firebase'); // Admin SDK import
-const firebase = require('firebase/app'); // Import Firebase App
-require('firebase/auth'); // Import Firebase Auth
+const { admin, db } = require('./firebase'); // Import Firebase Admin SDK
 require('dotenv').config(); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID
-};
-
-firebase.initializeApp(firebaseConfig);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Serve static files
 app.use(express.static('public'));
+
+app.get('/firebase-config', (req, res) => {
+  res.json({
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  });
+});
+
 
 // Register route
 app.post('/register', async (req, res) => {
@@ -38,21 +37,12 @@ app.post('/register', async (req, res) => {
       username,
       email
     });
-    res.send('User registered');
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
-});
 
-// Login route
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await firebase.auth().signInWithEmailAndPassword(email, password);
-    const idToken = await user.user.getIdToken();
-    res.json({ idToken });
+    // Log the user in immediately after registration
+    const customToken = await admin.auth().createCustomToken(userRecord.uid);
+    res.status(200).json({ message: 'User registered', customToken });
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 

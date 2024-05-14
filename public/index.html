@@ -6,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Add Firebase SDK scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
 <body>
     <header>
         <div class="header-content">
             <div class="logo-and-title">
-                <img src="onepromptlogo-removebg-preview.png" alt="One Prompt Games Logo" class="logo"> <!-- Ensure you have a logo image or remove this line -->
+                <img src="onepromptlogo-removebg-preview.png" alt="One Prompt Games Logo" class="logo">
                 <h1>One Prompt Games</h1>
             </div>
             <nav>
@@ -78,9 +81,10 @@
                 <h2>Sign In</h2>
                 <form id="loginForm">
                     <input type="email" id="loginEmail" placeholder="Email" required>
-                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
                     <button type="submit">Sign In</button>
                 </form>
+                <p>Don't have an account? <a href="#" onclick="showSignUp()">Sign Up</a></p>
             </div>
         </div>
 
@@ -92,16 +96,31 @@
                 <form id="registerForm">
                     <input type="text" id="registerUsername" placeholder="Username" required>
                     <input type="email" id="registerEmail" placeholder="Email" required>
-                    <input type="password" id="registerPassword" placeholder="Password" required>
+                    <input type="password" id="registerPassword" placeholder="Password" required autocomplete="new-password">
                     <button type="submit">Sign Up</button>
                 </form>
+                <p>Already have an account? <a href="#" onclick="showSignIn()">Sign In</a></p>
             </div>
         </div>
     </main>
 
+    <!-- Client-side Script -->
     <script>
+        async function fetchFirebaseConfig() {
+            const response = await fetch('/firebase-config');
+            return response.json();
+        }
+
+        async function initializeFirebase() {
+            const firebaseConfig = await fetchFirebaseConfig();
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        }
+
         function showSignIn() {
             document.getElementById('signInForm').style.display = 'block';
+            document.getElementById('signUpForm').style.display = 'none';
         }
 
         function closeSignIn() {
@@ -110,10 +129,28 @@
 
         function showSignUp() {
             document.getElementById('signUpForm').style.display = 'block';
+            document.getElementById('signInForm').style.display = 'none';
         }
 
         function closeSignUp() {
             document.getElementById('signUpForm').style.display = 'none';
+        }
+
+        function updateUI() {
+            const idToken = localStorage.getItem('idToken');
+            if (idToken) {
+                document.querySelector('.sign-in-button').textContent = 'Log Out';
+                document.querySelector('.sign-in-button').onclick = logout;
+            } else {
+                document.querySelector('.sign-in-button').textContent = 'Sign In';
+                document.querySelector('.sign-in-button').onclick = showSignIn;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('idToken');
+            updateUI();
+            alert('Logged out successfully');
         }
 
         document.getElementById('loginForm').addEventListener('submit', async (event) => {
@@ -121,22 +158,14 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('idToken', data.idToken);
-                    alert('Login successful');
-                    closeSignIn();
-                } else {
-                    alert('Login failed: ' + data.message);
-                }
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const idToken = await userCredential.user.getIdToken();
+                localStorage.setItem('idToken', idToken);
+                alert('Login successful');
+                closeSignIn();
+                updateUI();
             } catch (error) {
+                console.error("Error in login:", error);
                 alert('Login failed: ' + error.message);
             }
         });
@@ -147,23 +176,24 @@
             const password = document.getElementById('registerPassword').value;
             const username = document.getElementById('registerUsername').value;
             try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password, username })
-                });
-                if (response.ok) {
-                    alert('Registration successful');
-                    closeSignUp();
-                } else {
-                    const data = await response.json();
-                    alert('Registration failed: ' + data.message);
-                }
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                await user.updateProfile({ displayName: username });
+                const idToken = await user.getIdToken();
+                localStorage.setItem('idToken', idToken);
+                alert('Registration successful');
+                closeSignUp();
+                updateUI();
             } catch (error) {
+                console.error("Error in registration:", error);
                 alert('Registration failed: ' + error.message);
             }
+        });
+
+        // Initialize Firebase and UI on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeFirebase();
+            updateUI();
         });
     </script>
 
