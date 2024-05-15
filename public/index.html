@@ -28,6 +28,34 @@
             <p>Experience the unique creativity of AI through these interactive games, each developed from a single prompt given to an AI model. Dive into the games and challenge your skills!</p>
         </section>
 
+        <!-- Leaderboard Section -->
+        <section class="leaderboard">
+            <h2>Leaderboard</h2>
+            <div class="game-selector">
+                <div class="game-buttons">
+                    <button onclick="showHighScores('Meteor')">Meteor Math</button>
+                    <button onclick="showHighScores('Colors')">Color Collector</button>
+                    <button onclick="showHighScores('Echo')">Echo Tracker</button>
+                    <button onclick="showHighScores('Rocket')">Rocket Dodge</button>
+                </div>
+                <button class="my-high-scores-button" onclick="showUserHighScores()">My High Scores</button>
+            </div>        
+            <div class="leaderboard-table-wrapper">
+                <table id="highScoresTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Username</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="highScoresBody">
+                        <!-- High scores will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <div class="games-container">
             <div class="game">
                 <h3>Meteor Math</h3>
@@ -112,34 +140,35 @@
             const response = await fetch('/firebase-config');
             return response.json();
         }
-
+    
         async function initializeFirebase() {
             const firebaseConfig = await fetchFirebaseConfig();
             if (!firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
             }
+            firebase.firestore().settings({ timestampsInSnapshots: true });
         }
-
+    
         function showSignIn() {
             document.getElementById('signInForm').style.display = 'block';
             document.getElementById('signUpForm').style.display = 'none';
             document.getElementById('loginFeedback').textContent = ''; // Clear any existing feedback
         }
-
+    
         function closeSignIn() {
             document.getElementById('signInForm').style.display = 'none';
         }
-
+    
         function showSignUp() {
             document.getElementById('signUpForm').style.display = 'block';
             document.getElementById('signInForm').style.display = 'none';
             document.getElementById('registerFeedback').textContent = ''; // Clear any existing feedback
         }
-
+    
         function closeSignUp() {
             document.getElementById('signUpForm').style.display = 'none';
         }
-
+    
         function updateUI() {
             const idToken = localStorage.getItem('idToken');
             if (idToken) {
@@ -150,12 +179,14 @@
                 document.querySelector('.sign-in-button').onclick = showSignIn;
             }
         }
-
+    
         function logout() {
-            localStorage.removeItem('idToken');
-            updateUI();
+            firebase.auth().signOut().then(() => {
+                localStorage.removeItem('idToken');
+                updateUI();
+            });
         }
-
+    
         document.getElementById('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const email = document.getElementById('loginEmail').value;
@@ -175,7 +206,7 @@
                 feedback.textContent = 'Login failed: Incorrect email or password';
             }
         });
-
+    
         document.getElementById('registerForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const email = document.getElementById('registerEmail').value;
@@ -198,92 +229,79 @@
                 feedback.textContent = 'Registration failed: ' + error.message;
             }
         });
-
+    
+        // Function to fetch and display high scores
+        async function showHighScores(game) {
+            const highScoresBody = document.getElementById('highScoresBody');
+            highScoresBody.innerHTML = ''; // Clear existing scores
+    
+            try {
+                const response = await fetch(`/highscores/${game}`);
+                const highScores = await response.json();
+    
+                if (highScores.length === 0) {
+                    highScoresBody.innerHTML = `<tr><td colspan="3">No high scores yet.</td></tr>`;
+                    return;
+                }
+    
+                highScores.slice(0, 5).forEach((score, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${score.username}</td>
+                        <td>${score.score}</td>
+                    `;
+                    highScoresBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching high scores:', error);
+            }
+        }
+    
+        async function showUserHighScores() {
+            const idToken = localStorage.getItem('idToken');
+            if (!idToken) {
+                alert('Please log in to see your high scores');
+                return;
+            }
+    
+            try {
+                const response = await fetch('/user-highscores', {
+                    headers: {
+                        Authorization: `Bearer ${idToken}`
+                    }
+                });
+                const userHighScores = await response.json();
+    
+                const highScoresBody = document.getElementById('highScoresBody');
+                highScoresBody.innerHTML = '';
+    
+                if (userHighScores.length === 0) {
+                    highScoresBody.innerHTML = `<tr><td colspan="3">No high scores yet.</td></tr>`;
+                    return;
+                }
+    
+                userHighScores.forEach((score, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${score.username}</td>
+                        <td>${score.score}</td>
+                    `;
+                    highScoresBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching user high scores:', error);
+            }
+        }
+    
         // Initialize Firebase and UI on page load
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeFirebase();
             updateUI();
+            // Fetch high scores for the first game (Meteor) by default
+            showHighScores('Meteor');
         });
-    </script>
-
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 400px;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-            animation-name: animatetop;
-            animation-duration: 0.4s
-        }
-
-        @keyframes animatetop {
-            from {top: -300px; opacity: 0}
-            to {top: 0; opacity: 1}
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .modal h2 {
-            margin-top: 0;
-        }
-
-        .modal form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal form input {
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 1em;
-        }
-
-        .modal form button {
-            padding: 10px;
-            font-size: 1em;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        .modal form button:hover {
-            background-color: #0056b3;
-        }
-
-        .feedback {
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-    </style>
+    </script>    
 </body>
 </html>
