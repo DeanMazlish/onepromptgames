@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Defender</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: rgb(91, 3, 232);
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: #090909;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+            animation-name: animatetop;
+            animation-duration: 0.4s
+        }
+        @keyframes animatetop {
+            from {top: -300px; opacity: 0}
+            to {top: 0; opacity: 1}
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal h2 {
+            margin-top: 0;
+        }
+        .modal button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .modal button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- Modal for Game Over -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Game Over</h2>
+            <p>Your score: <span id="finalScore"></span></p>
+            <button onclick="playAgain()">Play Again</button>
+            <button onclick="returnHome()">Return Home</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        
+        const spaceship = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            width: 50,
+            height: 50,
+            speed: 5,
+            dx: 0,
+            dy: 0
+        };
+
+        const lasers = [];
+        const enemies = [];
+        const enemySpeed = 2;
+        let score = 0;
+        let gameOver = false;
+
+        function drawSpaceship() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(spaceship.x, spaceship.y, spaceship.width, spaceship.height);
+        }
+
+        function moveSpaceship() {
+            spaceship.x += spaceship.dx;
+            spaceship.y += spaceship.dy;
+
+            // Prevent spaceship from going out of bounds
+            if (spaceship.x < 0) spaceship.x = 0;
+            if (spaceship.x + spaceship.width > canvas.width) spaceship.x = canvas.width - spaceship.width;
+            if (spaceship.y < 0) spaceship.y = 0;
+            if (spaceship.y + spaceship.height > canvas.height) spaceship.y = canvas.height - spaceship.height;
+        }
+
+        function shootLaser() {
+            lasers.push({ x: spaceship.x + spaceship.width / 2 - 2.5, y: spaceship.y, width: 5, height: 10, speed: 7 });
+        }
+
+        function drawLasers() {
+            ctx.fillStyle = 'red';
+            lasers.forEach((laser, index) => {
+                laser.y -= laser.speed;
+                ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
+
+                // Remove lasers that go off screen
+                if (laser.y < 0) {
+                    lasers.splice(index, 1);
+                }
+            });
+        }
+
+        function createEnemy() {
+            const x = Math.random() * (canvas.width - 30);
+            enemies.push({ x, y: 0, width: 30, height: 30 });
+        }
+
+        function drawEnemies() {
+            ctx.fillStyle = 'green';
+            enemies.forEach((enemy, index) => {
+                enemy.y += enemySpeed;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+                // Check for collision with spaceship
+                if (
+                    enemy.x < spaceship.x + spaceship.width &&
+                    enemy.x + enemy.width > spaceship.x &&
+                    enemy.y < spaceship.y + spaceship.height &&
+                    enemy.y + enemy.height > spaceship.y
+                ) {
+                    gameOver = true;
+                }
+
+                // Remove enemies that go off screen
+                if (enemy.y > canvas.height) {
+                    enemies.splice(index, 1);
+                }
+            });
+        }
+
+        function checkLaserHits() {
+            lasers.forEach((laser, laserIndex) => {
+                enemies.forEach((enemy, enemyIndex) => {
+                    if (
+                        laser.x < enemy.x + enemy.width &&
+                        laser.x + laser.width > enemy.x &&
+                        laser.y < enemy.y + enemy.height &&
+                        laser.y + laser.height > enemy.y
+                    ) {
+                        score++;
+                        lasers.splice(laserIndex, 1);
+                        enemies.splice(enemyIndex, 1);
+                    }
+                });
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 20);
+        }
+
+        function showModal() {
+            finalScoreDisplay.textContent = score;
+            gameOverModal.style.display = 'block';
+        }
+
+        function closeModal() {
+            gameOverModal.style.display = 'none';
+        }
+
+        function playAgain() {
+            closeModal();
+            resetGame();
+        }
+
+        function returnHome() {
+            closeModal();
+            window.location.href = '/';
+        }
+
+        function submitScore(game, score) {
+            const idToken = localStorage.getItem('idToken');
+            if (!idToken) {
+                console.log('User not logged in. Score not saved.');
+                return;
+            }
+
+            const requestData = { game, score };
+            fetch('/highscore', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error submitting score:', data.error);
+                } else {
+                    console.log('Score submitted successfully:', data);
+                    showHighScores(game);
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting score:', error);
+            });
+        }
+
+        function gameOverScreen() {
+            showModal();
+            if (localStorage.getItem('idToken')) {
+                submitScore('SpaceDefender', score);
+            }
+            gameOver = true;
+        }
+
+        function resetGame() {
+            score = 0;
+            gameOver = false;
+            spaceship.x = canvas.width / 2;
+            spaceship.y = canvas.height - 30;
+            enemies.length = 0;
+            lasers.length = 0;
+            update();
+        }
+
+        function update() {
+            if (gameOver) {
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawSpaceship();
+            moveSpaceship();
+            drawLasers();
+            drawEnemies();
+            checkLaserHits();
+            drawScore();
+
+            if (gameOver) {
+                gameOverScreen();
+            } else {
+                requestAnimationFrame(update);
+            }
+        }
+
+        function keyDown(e) {
+            if (e.key === 'ArrowRight' || e.key === 'd') {
+                spaceship.dx = spaceship.speed;
+            } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+                spaceship.dx = -spaceship.speed;
+            } else if (e.key === 'ArrowUp' || e.key === 'w') {
+                spaceship.dy = -spaceship.speed;
+            } else if (e.key === 'ArrowDown' || e.key === 's') {
+                spaceship.dy = spaceship.speed;
+            } else if (e.key === ' ') {
+                shootLaser();
+            }
+        }
+
+        function keyUp(e) {
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'ArrowLeft' || e.key === 'a') {
+                spaceship.dx = 0;
+            } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'ArrowDown' || e.key === 's') {
+                spaceship.dy = 0;
+            }
+        }
+
+        document.addEventListener('keydown', keyDown);
+        document.addEventListener('keyup', keyUp);
+
+        setInterval(createEnemy, 1000);
+
+        update();
+    </script>
+</body>
+</html>

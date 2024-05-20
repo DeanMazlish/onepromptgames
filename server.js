@@ -131,7 +131,7 @@ app.get('/user-highscores', authenticate, async (req, res) => {
 app.use('/Colors', express.static(path.join(__dirname, 'Games/Colors')));
 app.use('/Echo', express.static(path.join(__dirname, 'Games/Echo')));
 app.use('/Meteor', express.static(path.join(__dirname, 'Games/Meteor')));
-app.use('/Rocket', express.static(path.join(__dirname, 'Games/Rocket')));
+app.use('/SpaceDefender', express.static(path.join(__dirname, 'Games/SpaceDefender')));
 
 // Root route serves the landing page
 app.get('/', (req, res) => {
