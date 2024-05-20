@@ -9,6 +9,8 @@
     <!-- Add Firebase SDK scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
 </head>
 <body>
     <header>
@@ -18,10 +20,13 @@
                 <h1>One Prompt Games</h1>
             </div>
             <nav>
-                <a href="#" class="sign-in-button" onclick="showSignIn()">Sign In</a>
+                <div class="user-info">
+                    <span class="user-username" id="userUsername"></span>
+                    <a href="#" class="sign-in-button" onclick="showSignIn()">Sign In</a>
+                </div>
             </nav>
         </div>
-    </header>
+    </header>    
     <main class="content">
         <section class="intro">
             <h2>Welcome to One Prompt Games!</h2>
@@ -32,14 +37,14 @@
         <section class="leaderboard">
             <h2>Leaderboard</h2>
             <div class="game-selector">
-                <div class="game-buttons">
-                    <button onclick="showHighScores('Meteor')">Meteor Math</button>
-                    <button onclick="showHighScores('Colors')">Color Collector</button>
-                    <button onclick="showHighScores('Echo')">Echo Tracker</button>
-                    <button onclick="showHighScores('Rocket')">Rocket Dodge</button>
-                </div>
-                <button class="my-high-scores-button" onclick="showUserHighScores()">My High Scores</button>
-            </div>        
+                <select id="gameDropdown" onchange="changeGame(this.value)">
+                    <option value="Meteor">Meteor Math</option>
+                    <option value="Colors">Color Collector</option>
+                    <option value="Echo">Echo Tracker</option>
+                    <option value="Rocket">Rocket Dodge</option>
+                </select>
+                <button class="my-high-scores-button" onclick="toggleHighScores()">My High Scores</button>
+            </div>                               
             <div class="leaderboard-table-wrapper">
                 <table id="highScoresTable">
                     <thead>
@@ -138,7 +143,9 @@
     <script>
         async function fetchFirebaseConfig() {
             const response = await fetch('/firebase-config');
-            return response.json();
+            const config = await response.json();
+            console.log('Firebase config:', config);
+            return config;
         }
     
         async function initializeFirebase() {
@@ -146,8 +153,28 @@
             if (!firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
             }
-            firebase.firestore().settings({ timestampsInSnapshots: true });
+            firebase.firestore(); // Initialize Firestore
+            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .then(() => {
+                    console.log('Auth persistence set to LOCAL');
+                    return firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        console.log('User is still logged in:', user);
+                        user.getIdToken().then((idToken) => {
+                        localStorage.setItem('idToken', idToken);
+                        updateUI();
+                        });
+                    } else {
+                        console.log('No user is logged in');
+                        updateUI();
+                    }
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error setting auth persistence:', error);
+                });
         }
+
     
         function showSignIn() {
             document.getElementById('signInForm').style.display = 'block';
@@ -171,19 +198,30 @@
     
         function updateUI() {
             const idToken = localStorage.getItem('idToken');
+            const userUsernameElement = document.getElementById('userUsername');
+
             if (idToken) {
+                const user = firebase.auth().currentUser;
+                if (user && user.displayName) {
+                    userUsernameElement.textContent = user.displayName;
+                    userUsernameElement.style.display = 'inline-block';
+                }
                 document.querySelector('.sign-in-button').textContent = 'Log Out';
                 document.querySelector('.sign-in-button').onclick = logout;
             } else {
+                userUsernameElement.style.display = 'none';
                 document.querySelector('.sign-in-button').textContent = 'Sign In';
                 document.querySelector('.sign-in-button').onclick = showSignIn;
             }
         }
+
+
     
         function logout() {
             firebase.auth().signOut().then(() => {
                 localStorage.removeItem('idToken');
                 updateUI();
+                window.location.reload(); // Ensures UI updates correctly
             });
         }
     
@@ -232,18 +270,19 @@
     
         // Function to fetch and display high scores
         async function showHighScores(game) {
+            currentGame = game; // Update the current game selection
             const highScoresBody = document.getElementById('highScoresBody');
             highScoresBody.innerHTML = ''; // Clear existing scores
-    
+
             try {
                 const response = await fetch(`/highscores/${game}`);
                 const highScores = await response.json();
-    
+
                 if (highScores.length === 0) {
                     highScoresBody.innerHTML = `<tr><td colspan="3">No high scores yet.</td></tr>`;
                     return;
                 }
-    
+
                 highScores.slice(0, 5).forEach((score, index) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -257,30 +296,45 @@
                 console.error('Error fetching high scores:', error);
             }
         }
-    
-        async function showUserHighScores() {
+
+        let showingUserHighScores = false;
+        let currentGame = 'Meteor'; // Default game
+
+        function toggleHighScores() {
+            if (showingUserHighScores) {
+                showHighScores(currentGame); // Show the overall leaderboard for the current game
+                document.querySelector('.my-high-scores-button').textContent = 'My High Scores';
+            } else {
+                showUserHighScores(currentGame); // Show the user's high scores for the current game
+                document.querySelector('.my-high-scores-button').textContent = 'Overall Leaderboard';
+            }
+            showingUserHighScores = !showingUserHighScores;
+        }
+
+        // Function to fetch and display high scores for the logged-in user
+        async function showUserHighScores(game) {
             const idToken = localStorage.getItem('idToken');
             if (!idToken) {
                 alert('Please log in to see your high scores');
                 return;
             }
-    
+
             try {
-                const response = await fetch('/user-highscores', {
+                const response = await fetch(`/user-highscores?game=${game}`, {
                     headers: {
                         Authorization: `Bearer ${idToken}`
                     }
                 });
                 const userHighScores = await response.json();
-    
+
                 const highScoresBody = document.getElementById('highScoresBody');
                 highScoresBody.innerHTML = '';
-    
+
                 if (userHighScores.length === 0) {
                     highScoresBody.innerHTML = `<tr><td colspan="3">No high scores yet.</td></tr>`;
                     return;
                 }
-    
+
                 userHighScores.forEach((score, index) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -294,11 +348,25 @@
                 console.error('Error fetching user high scores:', error);
             }
         }
+
+        // Function to handle game selection change
+        function changeGame(game) {
+            currentGame = game;
+            if (showingUserHighScores) {
+                showUserHighScores(game);
+            } else {
+                showHighScores(game);
+            }
+        }
+
+
     
         // Initialize Firebase and UI on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM fully loaded and parsed');
             await initializeFirebase();
             updateUI();
+            console.log('Initializing leaderboard with Meteor Math');
             // Fetch high scores for the first game (Meteor) by default
             showHighScores('Meteor');
         });

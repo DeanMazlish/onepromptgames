@@ -85,20 +85,7 @@ app.post('/highscore', authenticate, async (req, res) => {
   }
 });
 
-app.get('/user-highscores', authenticate, async (req, res) => {
-  try {
-    const userHighScoresSnapshot = await db.collection('highscores')
-      .where('userId', '==', req.user.uid)
-      .orderBy('score', 'desc')
-      .get();
-
-    const userHighScores = userHighScoresSnapshot.docs.map(doc => doc.data());
-    res.json(userHighScores);
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
-});
-
+// Endpoint for fetching general high scores
 app.get('/highscores/:game', async (req, res) => {
   const { game } = req.params;
   //console.log(`Fetching high scores for game: ${game}`); // Log game parameter
@@ -107,7 +94,6 @@ app.get('/highscores/:game', async (req, res) => {
     const highScoresSnapshot = await db.collection('highscores')
       .where('game', '==', game)
       .orderBy('score', 'desc')
-      .limit(10)
       .get();
 
     const highScores = highScoresSnapshot.docs.map(doc => doc.data());
@@ -118,6 +104,28 @@ app.get('/highscores/:game', async (req, res) => {
     res.status(400).send(error.message);
   }
 });
+
+// Endpoint for fetching user high scores
+app.get('/user-highscores', authenticate, async (req, res) => {
+  const { game } = req.query; // Get the game from the query parameter
+
+  try {
+      const userHighScoresSnapshot = await db.collection('highscores')
+          .where('userId', '==', req.user.uid)
+          .where('game', '==', game) // Filter by game
+          .orderBy('score', 'desc')
+          .get();
+
+      const userHighScores = userHighScoresSnapshot.docs.map(doc => doc.data());
+      res.json(userHighScores);
+  } catch (error) {
+      res.status(400).send(error.message);
+  }
+});
+
+
+
+
 
 // Serve games from their specific directories under the 'games' folder
 app.use('/Colors', express.static(path.join(__dirname, 'Games/Colors')));
